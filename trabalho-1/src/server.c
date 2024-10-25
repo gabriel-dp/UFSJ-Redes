@@ -4,14 +4,24 @@
 #include <string.h>
 #include <unistd.h>
 
+void communicate(int client_sock) {
+    char buffer[1024];
+    bzero(buffer, sizeof(buffer));
+
+    read(client_sock, buffer, sizeof(buffer));
+    printf("\nReceived from client: %s", buffer);
+
+    printf("\nSending to client: %s\n\n", buffer);
+    write(client_sock, buffer, sizeof(buffer));
+}
+
 int main() {
     /* Basic network connection variables */
     char *ip = "127.0.0.1";
     int port = 8000;
 
     /* Socket variables */
-    struct sockaddr_in server_addr, client_addr;  // Socket addresses
-    char buffer[1024];                            // Buffer to hold data received
+    struct sockaddr_in server_addr, client_addr;
 
     /* Create socket */
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -53,13 +63,7 @@ int main() {
         printf("[+] Client connected\n");
 
         /* Receive data from the client */
-        int bytes_received = recv(client_sock, buffer, sizeof(buffer) - 1, 0);
-        if (bytes_received < 0) {
-            perror("[-] Receive error");
-        } else {
-            buffer[bytes_received] = '\0';  // Null-terminate the received data
-            printf("Received: %s\n", buffer);
-        }
+        communicate(client_sock);
 
         /* Close the client socket */
         close(client_sock);

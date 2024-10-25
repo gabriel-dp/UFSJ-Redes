@@ -4,6 +4,19 @@
 #include <string.h>
 #include <unistd.h>
 
+void communicate(int sock) {
+    char buffer[1024];
+    bzero(buffer, sizeof(buffer));
+
+    printf("\nSending to server: ");
+    scanf("%s", buffer);
+    write(sock, buffer, sizeof(buffer));
+
+    bzero(buffer, sizeof(buffer));
+    read(sock, buffer, sizeof(buffer));
+    printf("Received from server: %s\n\n", buffer);
+}
+
 int main() {
     /* Basic network connection variables */
     char *ip = "127.0.0.1";
@@ -35,8 +48,10 @@ int main() {
     printf("[+] Connected to the server\n");
 
     /* Send and receive data */
+    communicate(sock);
 
     /* Close the socket */
     close(sock);
+    printf("[+] Disconnected\n");
     return 0;
 }
