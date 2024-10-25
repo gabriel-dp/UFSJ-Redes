@@ -70,5 +70,8 @@ int main() {
         printf("[+] Client disconnected\n");
     }
 
+    /* Close socket before finish */
+    printf("[+] Closed server socket before finish\n");
+    close(server_sock);
     return 0;
 }

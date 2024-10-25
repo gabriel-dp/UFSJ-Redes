@@ -9,7 +9,7 @@ void communicate(int sock) {
     bzero(buffer, sizeof(buffer));
 
     printf("\nSending to server: ");
-    scanf("%s", buffer);
+    scanf("%1023s", buffer);
     write(sock, buffer, sizeof(buffer));
 
     bzero(buffer, sizeof(buffer));
