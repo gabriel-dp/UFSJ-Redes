@@ -4,6 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../include/utils.h"
+
 void communicate(int client_sock) {
     char buffer[1024];
     bzero(buffer, sizeof(buffer));
@@ -26,10 +28,9 @@ int main() {
     /* Create socket */
     int server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock < 0) {
-        perror("[-] Socket error\n");
-        exit(1);
+        error("Failed to create TCP server socket");
     }
-    printf("[+] TCP server socket created\n");
+    success("TCP server socket created");
 
     /* Set address info */
     memset(&server_addr, '\0', sizeof(server_addr));
@@ -39,17 +40,15 @@ int main() {
 
     /* Bind socket */
     if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("[-] Bind error");
-        exit(1);
+        error("Failed to bind to port");
     }
-    printf("[+] Bind to port number: %d\n", port);
+    success("Bind to port");
 
     /* Listen for connections */
     if (listen(server_sock, 5) < 0) {
-        perror("[-] Listen error");
-        exit(1);
+        error("Failed to listen for connections");
     }
-    printf("[+] Listening...\n");
+    success("Listening...");
 
     /* Infinite waiting */
     while (1) {
@@ -57,21 +56,21 @@ int main() {
         socklen_t addr_size = sizeof(client_addr);
         int client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &addr_size);
         if (client_sock < 0) {
-            perror("[-] Accept error");
+            warn("Accept error");
             continue;
         }
-        printf("[+] Client connected\n");
+        success("Client connected");
 
         /* Receive data from the client */
         communicate(client_sock);
 
         /* Close the client socket */
         close(client_sock);
-        printf("[+] Client disconnected\n");
+        success("Client disconnected");
     }
 
     /* Close socket before finish */
-    printf("[+] Closed server socket before finish\n");
+    success("Closed server socket before finish");
     close(server_sock);
     return 0;
 }

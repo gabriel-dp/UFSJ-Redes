@@ -4,16 +4,24 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "../include/utils.h"
+
 void communicate(int sock) {
     char buffer[1024];
     bzero(buffer, sizeof(buffer));
 
     printf("\nSending to server: ");
     scanf("%1023s", buffer);
-    write(sock, buffer, sizeof(buffer));
+
+    ssize_t bytes_sent = write(sock, buffer, strlen(buffer));
+    if (bytes_sent < 0) {
+        close(sock);
+        error("Failed to write data");
+    }
 
     bzero(buffer, sizeof(buffer));
     read(sock, buffer, sizeof(buffer));
+
     printf("Received from server: %s\n\n", buffer);
 }
 
@@ -28,10 +36,9 @@ int main() {
     /* Create socket */
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
-        perror("[-] Socket error");
-        exit(1);
+        error("Failed to create TCP client socket");
     }
-    printf("[+] TCP client socket created\n");
+    success("TCP client socket created");
 
     /* Set address info */
     memset(&addr, '\0', sizeof(addr));
@@ -41,17 +48,16 @@ int main() {
 
     /* Connect to server */
     if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        perror("[-] Connect error");
-        close(sock);  // Close the socket before exiting
-        exit(1);
+        close(sock);
+        error("Failed to open a connection");
     }
-    printf("[+] Connected to the server\n");
+    success("Connected to the server");
 
     /* Send and receive data */
     communicate(sock);
 
     /* Close the socket */
     close(sock);
-    printf("[+] Disconnected\n");
+    success("Disconnected");
     return 0;
 }

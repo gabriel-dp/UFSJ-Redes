@@ -1,43 +1,39 @@
-# Makefile by gabriel-dp!
-
-# Defines C Compiler
-CC := gcc
+# Compiler
+CC = gcc
 
 # Code directory structure
 BINDIR := bin
 BUILDDIR := build
+INCDIR := include	
 SRCDIR := src
 
 # Compiler flags
-CFLAGS := -Wall
-
-# Linker flags
-LDFLAGS := -lm
-
-# %.o file names
-NAMES := $(notdir $(basename $(wildcard $(SRCDIR)/*.c)))
-OBJECTS := $(patsubst %,$(BUILDDIR)/%.o,$(NAMES))
-BINARIES := $(patsubst %,$(BINDIR)/%,$(NAMES))
-
-# Keep object files after compilation
-.SECONDARY: $(OBJECTS)
-
-# Rule to build all executables
-all: $(BINARIES)
+CFLAGS = -Wall -g
+LFLAGS = 
 
 
-# Rule to create individual executables for each .c file
-$(BINDIR)/%: $(BUILDDIR)/%.o
-	@ if [ ! -d ./$(BINDIR) ]; then mkdir -p $(BINDIR); fi
-	$(CC) -o $@ $< $(LDFLAGS)
+# Default target
+.PHONY: all
+all: client server
 
-# Rule for object binaries compilation
-$(BUILDDIR)/%.o: $(SRCDIR)/%.c
-	@ if [ ! -d ./$(BUILDDIR) ]; then mkdir -p $(BUILDDIR); fi
-	$(CC) -c $^ -o $@ $(CFLAGS) 
+# Rule to create necessary directories
+$(BUILDDIR) $(BINDIR):
+	@ if [ ! -d ./$@ ]; then mkdir -p $@; fi
+
+# Pattern rule to compile .c files to .o files
+$(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BUILDDIR)
+	$(CC) -c $< -o $@ $(CFLAGS) -I $(INCDIR)
+
+# Rule to compile the client executable
+client: $(BUILDDIR)/client.o $(BUILDDIR)/utils.o | $(BINDIR)
+	$(CC) -o $(BINDIR)/client $(BUILDDIR)/client.o $(BUILDDIR)/utils.o $(LFLAGS)
+
+# Rule to compile the server executable
+server: $(BUILDDIR)/server.o $(BUILDDIR)/utils.o | $(BINDIR)
+	$(CC) -o $(BINDIR)/server $(BUILDDIR)/server.o $(BUILDDIR)/utils.o $(LFLAGS)
 
 
-# Clean BIN and BUILD dirs
+# Clean up generated files
 .PHONY: clean
-clean: 
-	rm -rf $(BUILDDIR) $(BINDIR)
+clean:
+	rm -rf $(BINDIR) $(BUILDDIR)
