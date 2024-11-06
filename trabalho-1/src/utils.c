@@ -13,5 +13,5 @@ void error(const char *message) {
 }
 
 void warn(const char *message) {
-    printf("[!] %s", message);
+    printf("[!] %s\n", message);
 }

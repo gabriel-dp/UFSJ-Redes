@@ -6,15 +6,12 @@ BINDIR := bin
 BUILDDIR := build
 INCDIR := include	
 SRCDIR := src
+UTILS = utils
 
 # Compiler flags
 CFLAGS = -Wall -g
 LFLAGS = 
 
-
-# Default target
-.PHONY: all
-all: client server
 
 # Rule to create necessary directories
 $(BUILDDIR) $(BINDIR):
@@ -24,16 +21,19 @@ $(BUILDDIR) $(BINDIR):
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BUILDDIR)
 	$(CC) -c $< -o $@ $(CFLAGS) -I $(INCDIR)
 
-# Rule to compile the client executable
-client: $(BUILDDIR)/client.o $(BUILDDIR)/utils.o | $(BINDIR)
-	$(CC) -o $(BINDIR)/client $(BUILDDIR)/client.o $(BUILDDIR)/utils.o $(LFLAGS)
+# Pattern rule to compile .o files to executables
+$(BINDIR)/%: $(BUILDDIR)/%.o $(BUILDDIR)/$(UTILS).o | $(BINDIR)
+	$(CC) -o $@ $^ $(LFLAGS)	
 
-# Rule to compile the server executable
-server: $(BUILDDIR)/server.o $(BUILDDIR)/utils.o | $(BINDIR)
-	$(CC) -o $(BINDIR)/server $(BUILDDIR)/server.o $(BUILDDIR)/utils.o $(LFLAGS)
+# Pattern rule to compile the specified file using 'make <file_name>'
+%: $(BINDIR)/%
+	@echo "Building $@..."
 
+# Keep object files after compilation
+OBJECTS := $(patsubst %,$(BUILDDIR)/%.o,$(NAMES))
+.SECONDARY: $(OBJECTS)
 
 # Clean up generated files
-.PHONY: clean
+.PHONY: all clean
 clean:
 	rm -rf $(BINDIR) $(BUILDDIR)
