@@ -7,22 +7,31 @@
 #include "../include/utils.h"
 
 void communicate(int sock) {
-    char buffer[1024];
+    /* Create data buffer*/
+    char buffer[BUFFER_SIZE];
     bzero(buffer, sizeof(buffer));
 
+    /* Read user input */
     printf("\nSending to server: ");
     scanf("%1023s", buffer);
 
+    /* Send data to server */
     ssize_t bytes_sent = write(sock, buffer, strlen(buffer));
     if (bytes_sent < 0) {
         close(sock);
         error("Failed to write data");
     }
 
+    /* Read server data */
+    FILE *file = get_file(CLIENT_DIRECTORY, buffer, "w");
     bzero(buffer, sizeof(buffer));
-    read(sock, buffer, sizeof(buffer));
+    while (read(sock, buffer, sizeof(buffer)) != 0) {
+        printf("Received from server: %s\n\n", buffer);
+        fputs(buffer, file);
+        bzero(buffer, sizeof(buffer));
+    }
 
-    printf("Received from server: %s\n\n", buffer);
+    fclose(file);
 }
 
 int main() {

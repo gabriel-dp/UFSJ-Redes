@@ -7,14 +7,26 @@
 #include "../include/utils.h"
 
 void communicate(int client_sock) {
-    char buffer[1024];
+    /* Create data buffer */
+    char buffer[BUFFER_SIZE];
     bzero(buffer, sizeof(buffer));
 
+    /* Read message and try to get respective file */
     read(client_sock, buffer, sizeof(buffer));
     printf("\nReceived from client: %s", buffer);
+    FILE *file = get_file(SERVER_DIRECTORY, buffer, "r");
 
-    printf("\nSending to client: %s\n\n", buffer);
-    write(client_sock, buffer, sizeof(buffer));
+    /* Read file and send to the client */
+    size_t bytes_read;
+    bzero(buffer, sizeof(buffer));
+    while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE - 1, file)) > 0) {
+        buffer[bytes_read] = '\0';  // Fix end of buffer
+        printf("\nSending to client: %s\n\n", buffer);
+        write(client_sock, buffer, strlen(buffer));
+        bzero(buffer, sizeof(buffer));
+    }
+
+    fclose(file);
 }
 
 int main() {
