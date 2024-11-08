@@ -13,7 +13,7 @@ void communicate(int client_sock) {
 
     /* Read message and try to get respective file */
     read(client_sock, buffer, sizeof(buffer));
-    printf("\nReceived from client: %s", buffer);
+    printf("\nReceived from client: %s\n\n", buffer);
     FILE *file = get_file(SERVER_DIRECTORY, buffer, "r");
 
     /* Read file and send to the client */
@@ -21,7 +21,7 @@ void communicate(int client_sock) {
     bzero(buffer, sizeof(buffer));
     while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE - 1, file)) > 0) {
         buffer[bytes_read] = '\0';  // Fix end of buffer
-        printf("\nSending to client: %s\n\n", buffer);
+        // printf("\nSending to client: %s\n\n", buffer);
         write(client_sock, buffer, strlen(buffer));
         bzero(buffer, sizeof(buffer));
     }
@@ -60,11 +60,11 @@ int main() {
     if (listen(server_sock, 5) < 0) {
         error("Failed to listen for connections");
     }
-    success("Listening...");
 
     /* Infinite waiting */
     while (1) {
         /* Accepting connections */
+        success("Listening...");
         socklen_t addr_size = sizeof(client_addr);
         int client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &addr_size);
         if (client_sock < 0) {

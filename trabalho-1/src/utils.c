@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 void success(const char *message) {
     printf("[+] %s\n", message);
@@ -15,6 +16,22 @@ void error(const char *message) {
 
 void warn(const char *message) {
     printf("[!] %s\n", message);
+}
+
+time get_time() {
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    return format_time(now.tv_sec, now.tv_usec);
+}
+
+time format_time(long int sec, long int usec) {
+    time total = sec + ((time)usec / 1000000.0L);
+    return total;
+}
+
+void print_elapsed_time(char *message, time start, time end) {
+    time elapsed = end - start;
+    printf("%s = %Lf\n", message, elapsed);
 }
 
 FILE *get_file(const char *directory, const char *path, const char *mode) {

@@ -14,6 +14,7 @@ void communicate(int sock) {
     /* Read user input */
     printf("\nSending to server: ");
     scanf("%1023s", buffer);
+    printf("\n");
 
     /* Send data to server */
     ssize_t bytes_sent = write(sock, buffer, strlen(buffer));
@@ -25,11 +26,16 @@ void communicate(int sock) {
     /* Read server data */
     FILE *file = get_file(CLIENT_DIRECTORY, buffer, "w");
     bzero(buffer, sizeof(buffer));
+    time start = get_time();
     while (read(sock, buffer, sizeof(buffer)) != 0) {
-        printf("Received from server: %s\n\n", buffer);
+        // printf("Received from server: %s\n\n", buffer);
         fputs(buffer, file);
         bzero(buffer, sizeof(buffer));
     }
+    time end = get_time();
+
+    print_elapsed_time("Elapsed time", start, end);
+    printf("\n");
 
     fclose(file);
 }
