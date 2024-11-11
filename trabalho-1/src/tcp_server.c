@@ -16,23 +16,27 @@ void communicate(int client_sock) {
     printf("\nReceived from client: %s\n\n", buffer);
     FILE *file = get_file(SERVER_DIRECTORY, buffer, "r");
 
-    /* Read file and send to the client */
+    /* Read file and send it to client */
     size_t bytes_read;
     bzero(buffer, sizeof(buffer));
-    while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE - 1, file)) > 0) {
-        buffer[bytes_read] = '\0';  // Fix end of buffer
-        // printf("\nSending to client: %s\n\n", buffer);
+    if (file != NULL) {
+        while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE - 1, file)) > 0) {
+            buffer[bytes_read] = '\0';  // Fix end of buffer
+            // printf("\nSending to client: %s\n\n", buffer);
+            write(client_sock, buffer, strlen(buffer));
+            bzero(buffer, sizeof(buffer));
+        }
+        fclose(file);
+    } else {
+        strcpy(buffer, "ERROR - FILE NOT FOUND");
         write(client_sock, buffer, strlen(buffer));
-        bzero(buffer, sizeof(buffer));
     }
-
-    fclose(file);
 }
 
 int main() {
     /* Basic network connection variables */
     char *ip = "127.0.0.1";
-    int port = 8000;
+    int port = 8001;
 
     /* Socket variables */
     struct sockaddr_in server_addr, client_addr;

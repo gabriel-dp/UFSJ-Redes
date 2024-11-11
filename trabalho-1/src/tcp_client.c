@@ -25,17 +25,22 @@ void communicate(int sock) {
 
     /* Read server data */
     FILE *file = get_file(CLIENT_DIRECTORY, buffer, "w");
+    if (file == NULL) {
+        return;
+    }
+
     bzero(buffer, sizeof(buffer));
+    ssize_t total_bytes = 0, read_bytes;
     time start = get_time();
-    while (read(sock, buffer, sizeof(buffer)) != 0) {
+    while ((read_bytes = read(sock, buffer, sizeof(buffer) - 1)) > 0) {
         // printf("Received from server: %s\n\n", buffer);
         fputs(buffer, file);
         bzero(buffer, sizeof(buffer));
+        total_bytes += read_bytes;
     }
     time end = get_time();
 
-    print_elapsed_time("Elapsed time", start, end);
-    printf("\n");
+    print_statistics_download(start, end, total_bytes);
 
     fclose(file);
 }
@@ -43,7 +48,7 @@ void communicate(int sock) {
 int main() {
     /* Basic network connection variables */
     char *ip = "127.0.0.1";
-    int port = 8000;
+    int port = 8001;
 
     /* Socket variables*/
     struct sockaddr_in addr;
