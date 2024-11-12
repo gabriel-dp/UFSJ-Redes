@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -19,24 +20,27 @@ void communicate(int client_sock) {
     /* Read file and send it to client */
     size_t bytes_read;
     bzero(buffer, sizeof(buffer));
-    if (file != NULL) {
-        while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE - 1, file)) > 0) {
-            buffer[bytes_read] = '\0';  // Fix end of buffer
-            // printf("\nSending to client: %s\n\n", buffer);
-            write(client_sock, buffer, strlen(buffer));
-            bzero(buffer, sizeof(buffer));
-        }
-        fclose(file);
-    } else {
+    if (file == NULL) {
+        /* Send error message */
         strcpy(buffer, "ERROR - FILE NOT FOUND");
         write(client_sock, buffer, strlen(buffer));
+        return;
     }
+    while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE - 1, file)) > 0) {
+        buffer[bytes_read] = '\0';  // Fix end of buffer
+        // printf("\nSending to client: %s\n\n", buffer);
+        write(client_sock, buffer, strlen(buffer));
+        bzero(buffer, sizeof(buffer));
+    }
+
+    fclose(file);
 }
 
-int main() {
-    /* Basic network connection variables */
-    char *ip = "127.0.0.1";
-    int port = 8001;
+int main(int argc, char **argv) {
+    /* Network connection variables */
+    char *ip;
+    int port;
+    get_args(argc, argv, &ip, &port, NULL);
 
     /* Socket variables */
     struct sockaddr_in server_addr, client_addr;
@@ -77,7 +81,7 @@ int main() {
         }
         success("Client connected");
 
-        /* Receive data from the client */
+        /* Communicate with client */
         communicate(client_sock);
 
         /* Close the client socket */
@@ -85,8 +89,5 @@ int main() {
         success("Client disconnected");
     }
 
-    /* Close socket before finish */
-    success("Closed server socket before finish");
-    close(server_sock);
     return 0;
 }

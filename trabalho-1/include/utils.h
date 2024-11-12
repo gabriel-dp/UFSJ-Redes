@@ -14,13 +14,11 @@ void success(const char *message);
 void error(const char *message);
 void warn(const char *message);
 
+void get_args(int argc, char **argv, char **ip, int *port, char **file);
 time get_time();
-time format_time(long int sec, long int usec);
-void print_elapsed_time(char *message, time start, time end);
-
 FILE *get_file(const char *directory, const char *path, const char *mode);
 
 void print_statistics_download(time start, time end, size_t total_bytes);
-void print_statistics_download_udp(time start, time end, size_t total_bytes, unsigned int total_packages, unsigned int received_packages);
+void print_statistics_packages(unsigned long int total_packages, unsigned long int received_packages);
 
 #endif

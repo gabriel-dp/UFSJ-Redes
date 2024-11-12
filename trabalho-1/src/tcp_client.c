@@ -6,14 +6,20 @@
 
 #include "../include/utils.h"
 
-void communicate(int sock) {
+void communicate(int sock, char *filename) {
     /* Create data buffer*/
     char buffer[BUFFER_SIZE];
     bzero(buffer, sizeof(buffer));
 
-    /* Read user input */
-    printf("\nSending to server: ");
-    scanf("%1023s", buffer);
+    /* Get file name */
+    if (filename == NULL) {
+        /* Read user input */
+        printf("\nSending to server: ");
+        scanf("%1023s", buffer);
+    } else {
+        /* Use command line file */
+        strcpy(buffer, filename);
+    }
     printf("\n");
 
     /* Send data to server */
@@ -23,12 +29,13 @@ void communicate(int sock) {
         error("Failed to write data");
     }
 
-    /* Read server data */
+    /* Create response file */
     FILE *file = get_file(CLIENT_DIRECTORY, buffer, "w");
     if (file == NULL) {
         return;
     }
 
+    /* Read server data */
     bzero(buffer, sizeof(buffer));
     ssize_t total_bytes = 0, read_bytes;
     time start = get_time();
@@ -40,15 +47,18 @@ void communicate(int sock) {
     }
     time end = get_time();
 
+    /* Final results */
     print_statistics_download(start, end, total_bytes);
 
+    /* Close file before leaving */
     fclose(file);
 }
 
-int main() {
-    /* Basic network connection variables */
-    char *ip = "127.0.0.1";
-    int port = 8001;
+int main(int argc, char **argv) {
+    /* Network connection variables */
+    char *ip, *file;
+    int port;
+    get_args(argc, argv, &ip, &port, &file);
 
     /* Socket variables*/
     struct sockaddr_in addr;
@@ -74,7 +84,7 @@ int main() {
     success("Connected to the server");
 
     /* Send and receive data */
-    communicate(sock);
+    communicate(sock, file);
 
     /* Close the socket */
     close(sock);
