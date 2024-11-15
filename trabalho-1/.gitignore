@@ -1,1 +1,3 @@
-tests/client/**
+tests/**/*.txt
+tests/**/*.bin
+tests/**/*.md5

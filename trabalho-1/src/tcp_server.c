@@ -15,7 +15,7 @@ void communicate(int client_sock) {
     /* Read message and try to get respective file */
     read(client_sock, buffer, sizeof(buffer));
     printf("\nReceived from client: %s\n\n", buffer);
-    FILE *file = get_file(SERVER_DIRECTORY, buffer, "r");
+    FILE *file = get_file(SERVER_DIRECTORY, buffer, "rb");
 
     /* Read file and send it to client */
     size_t bytes_read;
@@ -26,10 +26,9 @@ void communicate(int client_sock) {
         write(client_sock, buffer, strlen(buffer));
         return;
     }
-    while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE - 1, file)) > 0) {
-        buffer[bytes_read] = '\0';  // Fix end of buffer
+    while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE, file)) > 0) {
         // printf("\nSending to client: %s\n\n", buffer);
-        write(client_sock, buffer, strlen(buffer));
+        write(client_sock, buffer, bytes_read);
         bzero(buffer, sizeof(buffer));
     }
 

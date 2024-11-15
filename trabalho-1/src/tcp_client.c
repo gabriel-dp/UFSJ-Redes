@@ -30,7 +30,7 @@ void communicate(int sock, char *filename) {
     }
 
     /* Create response file */
-    FILE *file = get_file(CLIENT_DIRECTORY, buffer, "w");
+    FILE *file = get_file(CLIENT_DIRECTORY, buffer, "wb");
     if (file == NULL) {
         return;
     }
@@ -39,9 +39,9 @@ void communicate(int sock, char *filename) {
     bzero(buffer, sizeof(buffer));
     ssize_t total_bytes = 0, read_bytes;
     time start = get_time();
-    while ((read_bytes = read(sock, buffer, sizeof(buffer) - 1)) > 0) {
+    while ((read_bytes = read(sock, buffer, sizeof(buffer))) > 0) {
         // printf("Received from server: %s\n\n", buffer);
-        fputs(buffer, file);
+        fwrite(buffer, sizeof(char), read_bytes, file);
         bzero(buffer, sizeof(buffer));
         total_bytes += read_bytes;
     }
