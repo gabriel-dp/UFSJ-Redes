@@ -60,6 +60,33 @@ void communicate(int sock, struct sockaddr_in *server_addr, char *filename) {
     fclose(file);
 }
 
-int main(){
-    
+int main(int argc, char **argv) {
+    /* Variaveis de conexao de rede */
+    char *ip, *file;
+    int port;
+    get_args(argc, argv, &ip, &port, &file);
+
+    /* Variaveis para o socket */
+    struct sockaddr_in server_addr;
+
+    /* Cria o socket UDP */
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) {
+        error("Falha ao criar o socket UDP do cliente");
+    }
+    success("Socket UDP do cliente criado");
+
+    /* Configura as informacoes do servidor */
+    memset(&server_addr, '\0', sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(port);
+    server_addr.sin_addr.s_addr = inet_addr(ip);
+
+    /* Comunica com o servidor */
+    communicate(sock, &server_addr, file);
+
+    /* Fecha o socket */
+    close(sock);
+    success("Desconectado");
+    return 0;
 }
