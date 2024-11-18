@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include "../include/utils.h"
@@ -24,8 +25,7 @@ void communicate(int sock, struct sockaddr_in *server_addr, char *filename) {
     printf("\n");
 
     /* Send file name to server */
-    ssize_t bytes_sent = sendto(sock, buffer, strlen(buffer), 0, 
-                                (struct sockaddr *)server_addr, addr_len);
+    ssize_t bytes_sent = sendto(sock, buffer, strlen(buffer), 0, (struct sockaddr *)server_addr, addr_len);
     if (bytes_sent < 0) {
         close(sock);
         error("Falha ao enviar dados para o servidor");
@@ -37,13 +37,18 @@ void communicate(int sock, struct sockaddr_in *server_addr, char *filename) {
         return;
     }
 
+    /* Set client timeout */
+    struct timeval timeout;
+    timeout.tv_sec = 2;  // max timeout
+    timeout.tv_usec = 0;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
     /* Receive file data */
     bzero(buffer, sizeof(buffer));
     ssize_t total_bytes = 0, read_bytes;
     unsigned long int total_packages = 0, received_packages = 0;
     time start = get_time();
-    while ((read_bytes = recvfrom(sock, buffer, sizeof(buffer), 0, 
-                                  (struct sockaddr *)server_addr, &addr_len)) > 0) {
+    while ((read_bytes = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr *)server_addr, &addr_len)) > 0) {
         fwrite(buffer, sizeof(char), read_bytes, file);
         bzero(buffer, sizeof(buffer));
         total_bytes += read_bytes;

@@ -7,14 +7,13 @@
 #include "../include/utils.h"
 
 void communicate(int server_sock, struct sockaddr_in *client_addr) {
-    /* Create data buffer */ 
+    /* Create data buffer */
     char buffer[BUFFER_SIZE];
     socklen_t addr_len = sizeof(*client_addr);
     bzero(buffer, sizeof(buffer));
 
     /* Receive file name from client */
-    ssize_t bytes_received = recvfrom(server_sock, buffer, sizeof(buffer), 0, 
-                                       (struct sockaddr *)client_addr, &addr_len);
+    ssize_t bytes_received = recvfrom(server_sock, buffer, sizeof(buffer), 0, (struct sockaddr *)client_addr, &addr_len);
     if (bytes_received < 0) {
         warn("Falha ao receber dados do cliente");
         return;
@@ -31,13 +30,12 @@ void communicate(int server_sock, struct sockaddr_in *client_addr) {
     if (file == NULL) {
         /* Send error message */
         strcpy(buffer, "ERRO - ARQUIVO NAO ENCONTRADO");
-        sendto(server_sock, buffer, strlen(buffer), 0, 
+        sendto(server_sock, buffer, strlen(buffer), 0,
                (struct sockaddr *)client_addr, addr_len);
         return;
     }
     while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE, file)) > 0) {
-        ssize_t bytes_sent = sendto(server_sock, buffer, bytes_read, 0, 
-                                    (struct sockaddr *)client_addr, addr_len);
+        ssize_t bytes_sent = sendto(server_sock, buffer, bytes_read, 0, (struct sockaddr *)client_addr, addr_len);
         if (bytes_sent < 0) {
             warn("Falha ao enviar dados para o cliente");
             break;
