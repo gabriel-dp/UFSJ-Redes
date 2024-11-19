@@ -18,10 +18,12 @@ def generate_file(file_name, size_mb):
     print(f"File '{file_name}' of size {str(size_mb).zfill(2)} MB created.")
 
 def generate_hash(file_name, output_file):
-    cmd = f"md5sum {file_name} > {output_file}"
-    print(f"Running: '{cmd}'")
     try:
-        subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        result = subprocess.run(f"md5sum {file_name}", shell=True, capture_output=True, text=True)
+        with open(output_file, "w") as out_f:
+            hash_value = result.stdout.split()[0]
+            base_name = output_file.split("/")[-1]
+            out_f.write(f"{hash_value} {base_name}\n")
     except:
         pass
 

@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,7 +9,7 @@
 
 void communicate(int server_sock, struct sockaddr_in *client_addr) {
     /* Create data buffer */
-    char buffer[BUFFER_SIZE];
+    char buffer[BUFFER_SIZE], aux_buffer[BUFFER_SIZE - 6];
     socklen_t addr_len = sizeof(*client_addr);
     bzero(buffer, sizeof(buffer));
 
@@ -19,33 +20,46 @@ void communicate(int server_sock, struct sockaddr_in *client_addr) {
         return;
     }
     printf("\nRecebido do cliente: %s\n\n", buffer);
-
-    /* Open requested file for client */
     FILE *file = get_file(SERVER_DIRECTORY, buffer, "rb");
 
-    /* Read file and send it to client */
-    size_t bytes_read;
-    unsigned long int total_packages = 0;
-    bzero(buffer, sizeof(buffer));
-    if (file == NULL) {
-        /* Send error message */
-        strcpy(buffer, "ERRO - ARQUIVO NAO ENCONTRADO");
-        sendto(server_sock, buffer, strlen(buffer), 0,
-               (struct sockaddr *)client_addr, addr_len);
-        return;
-    }
-    while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE, file)) > 0) {
-        ssize_t bytes_sent = sendto(server_sock, buffer, bytes_read, 0, (struct sockaddr *)client_addr, addr_len);
-        if (bytes_sent < 0) {
-            warn("Falha ao enviar dados para o cliente");
-            break;
-        }
-        bzero(buffer, sizeof(buffer));
-        total_packages++;
-    }
+    /* Get file size and determine number of packages */
+    fseek(file, 0, SEEK_END);
+    long fileSize = ftell(file);
+    long total_packages = ceil((double)fileSize / (BUFFER_SIZE - 6));
+    fseek(file, 0, SEEK_SET);
 
-    /* Exibe as estatisticas no servidor */
-    printf("Total de pacotes enviados: %lu\n", total_packages);
+    if (file != NULL) {
+        /* Read file and send it to client */
+        long sent_packages = 0;
+        size_t bytes_read;
+        bzero(buffer, sizeof(buffer));
+        bzero(aux_buffer, sizeof(aux_buffer));
+        while ((bytes_read = fread(aux_buffer, sizeof(char), BUFFER_SIZE - 6, file)) > 0) {
+            sent_packages++;
+
+            /* Encode package id and total packages using 3 bytes */
+            buffer[0] = (sent_packages >> 16) & 0xFF;
+            buffer[1] = (sent_packages >> 8) & 0xFF;
+            buffer[2] = sent_packages & 0xFF;
+            buffer[3] = (total_packages >> 16) & 0xFF;
+            buffer[4] = (total_packages >> 8) & 0xFF;
+            buffer[5] = total_packages & 0xFF;
+
+            memcpy(buffer + 6, aux_buffer, bytes_read);
+            ssize_t bytes_sent = sendto(server_sock, buffer, bytes_read + 6, 0, (struct sockaddr *)client_addr, addr_len);
+            if (bytes_sent < 0) {
+                warn("Falha ao enviar dados para o cliente");
+                break;
+            }
+
+            bzero(buffer, sizeof(buffer));
+            bzero(aux_buffer, sizeof(aux_buffer));
+        }
+    } else {
+        /* Send error message */
+        strcpy(buffer, "ERROR - FILE NOT FOUND");
+        sendto(server_sock, buffer, strlen(buffer), 0, (struct sockaddr *)client_addr, addr_len);
+    }
 
     /* Close the file */
     fclose(file);

@@ -46,10 +46,16 @@ void communicate(int sock, struct sockaddr_in *server_addr, char *filename) {
     /* Receive file data */
     bzero(buffer, sizeof(buffer));
     ssize_t total_bytes = 0, read_bytes;
-    unsigned long int total_packages = 0, received_packages = 0;
+    unsigned long int total_packages = -1, received_packages = 0;
     time start = get_time();
     while ((read_bytes = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr *)server_addr, &addr_len)) > 0) {
-        fwrite(buffer, sizeof(char), read_bytes, file);
+        /* Decode package id and total packages */
+        if (total_packages == -1) {
+            total_packages = ((unsigned char)buffer[3] << 16) | ((unsigned char)buffer[4] << 8) | (unsigned char)buffer[5];
+        }
+        // int id = ((unsigned char)buffer[0] << 16) | ((unsigned char)buffer[1] << 8) | (unsigned char)buffer[2];
+
+        fwrite(buffer + 6, sizeof(char), read_bytes - 6, file);
         bzero(buffer, sizeof(buffer));
         total_bytes += read_bytes;
         received_packages++;
@@ -57,7 +63,6 @@ void communicate(int sock, struct sockaddr_in *server_addr, char *filename) {
     time end = get_time();
 
     /* Imprime as estatisticas */
-    total_packages = total_bytes / BUFFER_SIZE;  // Aproxima o numero total de pacotes enviados
     print_statistics_download(start, end, total_bytes);
     print_statistics_packages(total_packages, received_packages);
 

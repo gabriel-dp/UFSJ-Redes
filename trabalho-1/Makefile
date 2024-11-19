@@ -10,7 +10,7 @@ UTILS = utils
 
 # Compiler flags
 CFLAGS = -Wall -g
-LFLAGS = 
+LFLAGS = -lm
 
 
 # Rule to create necessary directories
