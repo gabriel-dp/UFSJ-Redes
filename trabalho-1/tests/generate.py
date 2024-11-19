@@ -22,7 +22,7 @@ def generate_hash(file_name, output_file):
         result = subprocess.run(f"md5sum {file_name}", shell=True, capture_output=True, text=True)
         with open(output_file, "w") as out_f:
             hash_value = result.stdout.split()[0]
-            base_name = output_file.split("/")[-1]
+            base_name = file_name.split("/")[-1]
             out_f.write(f"{hash_value} {base_name}\n")
     except:
         pass

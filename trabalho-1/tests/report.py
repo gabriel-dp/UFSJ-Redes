@@ -13,19 +13,29 @@ command_pattern = r"Command:\s+.*-f\s+(\S+)"
 time_pattern = r"Elapsed time \(seconds\)\s+=\s+([\d.]+)"
 size_pattern = r"Size \(bytes\)\s+=\s+(\d+)"
 speed_pattern = r"Speed \(bytes/second\)\s+=\s+([\d.]+)"
+package_loss_pattern = r"Package Loss\s+=\s+([\d.]+)%\s+\((\d+)/(\d+)\)"
 
 # Extract data using regex
 commands = re.findall(command_pattern, report)
 times = re.findall(time_pattern, report)
 sizes = re.findall(size_pattern, report)
 speeds = re.findall(speed_pattern, report)
+package_losses = re.findall(package_loss_pattern, report)
+
+# Parse Package Loss data
+loss_percentages = [float(pl[0]) for pl in package_losses]
+received_counts = [int(pl[1]) for pl in package_losses]
+total_counts = [int(pl[2]) for pl in package_losses]
 
 # Create a DataFrame
 data = {
     "File": commands,
     "Elapsed Time (s)": list(map(float, times)),
     "Size (bytes)": list(map(int, sizes)),
-    "Speed (bytes/s)": list(map(float, speeds))
+    "Speed (bytes/s)": list(map(float, speeds)),
+    "Package Loss (%)": loss_percentages,
+    "Received Packets": received_counts,
+    "Total Packets": total_counts
 }
 df = pd.DataFrame(data)
 filtered_df = df[df["Size (bytes)"] >= 1048576]
@@ -64,7 +74,12 @@ plt.xticks(rotation=45, ha="right")
 plt.tight_layout()
 plt.show()
 
-# Pairwise relationships using seaborn's pairplot
-sns.pairplot(filtered_df, diag_kind="kde")
-plt.suptitle("Pairwise Relationships of Metrics", y=1.02)
+# Create a bar plot for package loss per command
+plt.figure(figsize=(10, 6))
+sns.lineplot(x="File", y="Package Loss (%)", data=filtered_df)
+plt.title("Package Loss per File")
+plt.xlabel("File")
+plt.ylabel("Package Loss (%)")
+plt.xticks(rotation=45, ha="right")
+plt.tight_layout()
 plt.show()

@@ -8,10 +8,11 @@
 #include "../include/utils.h"
 
 void communicate(int sock, struct sockaddr_in *server_addr, char *filename) {
+    socklen_t addr_len = sizeof(*server_addr);
+
     /* Create data buffer */
     char buffer[BUFFER_SIZE];
-    socklen_t addr_len = sizeof(*server_addr);
-    bzero(buffer, sizeof(buffer));
+    memset(buffer, 0, sizeof(buffer));
 
     /* Get file name */
     if (filename == NULL) {
@@ -39,15 +40,15 @@ void communicate(int sock, struct sockaddr_in *server_addr, char *filename) {
 
     /* Set client timeout */
     struct timeval timeout;
-    timeout.tv_sec = 2;  // max timeout
+    timeout.tv_sec = 2;
     timeout.tv_usec = 0;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-    /* Receive file data */
-    bzero(buffer, sizeof(buffer));
+    /* Receive server data */
+    memset(buffer, 0, sizeof(buffer));
     ssize_t total_bytes = 0, read_bytes;
     unsigned long int total_packages = -1, received_packages = 0;
-    time start = get_time();
+    time start = get_time(), end = get_time();
     while ((read_bytes = recvfrom(sock, buffer, sizeof(buffer), 0, (struct sockaddr *)server_addr, &addr_len)) > 0) {
         /* Decode package id and total packages */
         if (total_packages == -1) {
@@ -56,47 +57,48 @@ void communicate(int sock, struct sockaddr_in *server_addr, char *filename) {
         // int id = ((unsigned char)buffer[0] << 16) | ((unsigned char)buffer[1] << 8) | (unsigned char)buffer[2];
 
         fwrite(buffer + 6, sizeof(char), read_bytes - 6, file);
-        bzero(buffer, sizeof(buffer));
+        memset(buffer, 0, sizeof(buffer));
         total_bytes += read_bytes;
-        received_packages++;
-    }
-    time end = get_time();
 
-    /* Imprime as estatisticas */
+        received_packages++;
+        end = get_time();
+    }
+
+    /* Final results */
     print_statistics_download(start, end, total_bytes);
     print_statistics_packages(total_packages, received_packages);
 
-    /* Fecha o arquivo */
+    /* Close file before leaving */
     fclose(file);
 }
 
 int main(int argc, char **argv) {
-    /* Variaveis de conexao de rede */
+    /* Network connection variables */
     char *ip, *file;
     int port;
     get_args(argc, argv, &ip, &port, &file);
 
-    /* Variaveis para o socket */
-    struct sockaddr_in server_addr;
+    /* Socket variables*/
+    struct sockaddr_in addr;
 
     /* Cria o socket UDP */
     int sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) {
-        error("Falha ao criar o socket UDP do cliente");
+        error("Failed to create UDP client socket");
     }
-    success("Socket UDP do cliente criado");
+    success("UDP client socket created");
 
-    /* Configura as informacoes do servidor */
-    memset(&server_addr, '\0', sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(port);
-    server_addr.sin_addr.s_addr = inet_addr(ip);
+    /* Set server adress info */
+    memset(&addr, '\0', sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = inet_addr(ip);
 
-    /* Comunica com o servidor */
-    communicate(sock, &server_addr, file);
+    /* Communicate with the server */
+    communicate(sock, &addr, file);
 
-    /* Fecha o socket */
+    /* Close the socket */
     close(sock);
-    success("Desconectado");
+    success("Disconnected");
     return 0;
 }

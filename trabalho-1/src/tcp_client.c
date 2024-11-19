@@ -9,7 +9,7 @@
 void communicate(int sock, char *filename) {
     /* Create data buffer*/
     char buffer[BUFFER_SIZE];
-    bzero(buffer, sizeof(buffer));
+    memset(buffer, 0, sizeof(buffer));
 
     /* Get file name */
     if (filename == NULL) {
@@ -36,13 +36,13 @@ void communicate(int sock, char *filename) {
     }
 
     /* Read server data */
-    bzero(buffer, sizeof(buffer));
+    memset(buffer, 0, sizeof(buffer));
     ssize_t total_bytes = 0, read_bytes;
     time start = get_time();
     while ((read_bytes = read(sock, buffer, sizeof(buffer))) > 0) {
         // printf("Received from server: %s\n\n", buffer);
         fwrite(buffer, sizeof(char), read_bytes, file);
-        bzero(buffer, sizeof(buffer));
+        memset(buffer, 0, sizeof(buffer));
         total_bytes += read_bytes;
     }
     time end = get_time();
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
     }
     success("TCP client socket created");
 
-    /* Set address info */
+    /* Set address adress info */
     memset(&addr, '\0', sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
     }
     success("Connected to the server");
 
-    /* Send and receive data */
+    /* Communicate with the server */
     communicate(sock, file);
 
     /* Close the socket */

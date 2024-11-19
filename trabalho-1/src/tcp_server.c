@@ -10,28 +10,28 @@
 void communicate(int client_sock) {
     /* Create data buffer */
     char buffer[BUFFER_SIZE];
-    bzero(buffer, sizeof(buffer));
+    memset(buffer, 0, sizeof(buffer));
 
-    /* Read message and try to get respective file */
+    /* Read file name from client and try to get respective file */
     read(client_sock, buffer, sizeof(buffer));
     printf("\nReceived from client: %s\n\n", buffer);
     FILE *file = get_file(SERVER_DIRECTORY, buffer, "rb");
-
-    /* Read file and send it to client */
-    size_t bytes_read;
-    bzero(buffer, sizeof(buffer));
     if (file == NULL) {
         /* Send error message */
         strcpy(buffer, "ERROR - FILE NOT FOUND");
         write(client_sock, buffer, strlen(buffer));
         return;
     }
+
+    /* Read file and send it to the client */
+    size_t bytes_read;
+    memset(buffer, 0, sizeof(buffer));
     while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE, file)) > 0) {
-        // printf("\nSending to client: %s\n\n", buffer);
         write(client_sock, buffer, bytes_read);
-        bzero(buffer, sizeof(buffer));
+        memset(buffer, 0, sizeof(buffer));
     }
 
+    /* Close the file */
     fclose(file);
 }
 
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     if (bind(server_sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         error("Failed to bind to port");
     }
-    success("Bind to port");
+    success("Binded to port");
 
     /* Listen for connections */
     if (listen(server_sock, 5) < 0) {
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     /* Infinite waiting */
     while (1) {
         /* Accepting connections */
-        success("Listening...");
+        success("Waiting for client...");
         socklen_t addr_size = sizeof(client_addr);
         int client_sock = accept(server_sock, (struct sockaddr *)&client_addr, &addr_size);
         if (client_sock < 0) {

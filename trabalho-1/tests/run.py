@@ -7,7 +7,7 @@ formatted_time = current_time.strftime("%Y-%m-%d-%H-%M-%S")
 ip = "127.0.0.1"
 port = "8001"
 
-executable = "./bin/tcp_client"
+executable = "./bin/udp_client"
 flags = f"-i {ip} -p {port}"
 input_files = []
 for i in range(1, 11):
