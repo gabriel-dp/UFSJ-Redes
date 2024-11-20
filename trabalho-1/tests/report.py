@@ -21,6 +21,10 @@ times = re.findall(time_pattern, report)
 sizes = re.findall(size_pattern, report)
 speeds = re.findall(speed_pattern, report)
 package_losses = re.findall(package_loss_pattern, report)
+if len(package_losses) < len(commands):
+    # Fill missing values with zeros or placeholders
+    missing_count = len(commands) - len(package_losses)
+    package_losses += [(0.0, 0, 0)] * missing_count
 
 # Parse Package Loss data
 loss_percentages = [float(pl[0]) for pl in package_losses]
@@ -39,6 +43,16 @@ data = {
 }
 df = pd.DataFrame(data)
 filtered_df = df[df["Size (bytes)"] >= 1048576]
+# .groupby("File").agg(
+#     {
+#         "Elapsed Time (s)": "mean",
+#         "Size (bytes)": "mean",
+#         "Speed (bytes/s)": "mean",
+#         "Package Loss (%)": "mean",
+#         "Received Packets": "sum",
+#         "Total Packets": "sum"
+#     }
+# ).reset_index()
 
 # Display the DataFrame
 print(filtered_df)
