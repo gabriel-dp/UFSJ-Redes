@@ -33,67 +33,60 @@ total_counts = [int(pl[2]) for pl in package_losses]
 
 # Create a DataFrame
 data = {
-    "File": commands,
-    "Elapsed Time (s)": list(map(float, times)),
-    "Size (bytes)": list(map(int, sizes)),
-    "Speed (bytes/s)": list(map(float, speeds)),
-    "Package Loss (%)": loss_percentages,
-    "Received Packets": received_counts,
-    "Total Packets": total_counts
+    "Arquivo": commands,
+    "Tempo decorrido (s)": list(map(float, times)),
+    "Tamanho (bytes)": list(map(int, sizes)),
+    "Velocidade (bytes/s)": list(map(float, speeds)),
+    "Perda de pacotes (%)": loss_percentages,
+    "Pacotes recebidos": received_counts,
+    "Pacotes totais": total_counts
 }
 df = pd.DataFrame(data)
-filtered_df = df[df["Size (bytes)"] >= 1048576]
-# .groupby("File").agg(
-#     {
-#         "Elapsed Time (s)": "mean",
-#         "Size (bytes)": "mean",
-#         "Speed (bytes/s)": "mean",
-#         "Package Loss (%)": "mean",
-#         "Received Packets": "sum",
-#         "Total Packets": "sum"
-#     }
-# ).reset_index()
+filtered_df = df[df["Tamanho (bytes)"] >= 1048576] # Remove hash files
 
 # Display the DataFrame
 print(filtered_df)
 
 
-# Create a bar plot for elapsed time per command
+# Create a line plot for elapsed time per command
 plt.figure(figsize=(10, 6))
-sns.lineplot(x="File", y="Elapsed Time (s)", data=filtered_df)
-plt.title("Elapsed Time per File")
-plt.xlabel("File")
-plt.ylabel("Elapsed Time (seconds)")
+sns.lineplot(x="Arquivo", y="Tempo decorrido (s)", data=filtered_df, marker='o')
+plt.title("Tempo médio decorrido por arquivo")
+plt.xlabel("Arquivo")
+plt.ylabel("Tempo decorrido (segundos)")
 plt.xticks(rotation=45, ha="right")
 plt.tight_layout()
 plt.show()
 
-# Create a bar plot for file size per command
+# Create a line plot for file size per command
 plt.figure(figsize=(10, 6))
-sns.lineplot(x="File", y="Size (bytes)", data=filtered_df)
-plt.title("File Size per File")
-plt.xlabel("File")
-plt.ylabel("File Size (bytes)")
+sns.lineplot(x="Arquivo", y="Tamanho (bytes)", data=filtered_df, marker='o')
+plt.title("Tamanho dos Arquivos")
+max_bytes = filtered_df["Tamanho (bytes)"].max()
+y_ticks = range(0, int(max_bytes // (1024 * 1024)) + 1)  # Ticks in MB
+plt.yticks([y * 1024 * 1024 for y in y_ticks], [y for y in y_ticks])
+plt.xlabel("Arquivo")
+plt.ylabel("Tamanho do arquivo (MB)")
 plt.xticks(rotation=45, ha="right")
 plt.tight_layout()
 plt.show()
 
-# Create a bar plot for speed per command
+# Create a line plot for speed per command
 plt.figure(figsize=(10, 6))
-sns.lineplot(x="File", y="Speed (bytes/s)", data=filtered_df)
-plt.title("Transfer Speed per File")
-plt.xlabel("File")
-plt.ylabel("Speed (bytes/second)")
+sns.lineplot(x="Arquivo", y="Velocidade (bytes/s)", data=filtered_df, marker='o')
+plt.title("Velocidade média de Transferência por Arquivo")
+plt.xlabel("Arquivo")
+plt.ylabel("Vecolidade (bytes/segundo)")
 plt.xticks(rotation=45, ha="right")
 plt.tight_layout()
 plt.show()
 
-# Create a bar plot for package loss per command
+# Create a line plot for package loss per command
 plt.figure(figsize=(10, 6))
-sns.lineplot(x="File", y="Package Loss (%)", data=filtered_df)
-plt.title("Package Loss per File")
-plt.xlabel("File")
-plt.ylabel("Package Loss (%)")
+sns.lineplot(x="Arquivo", y="Perda de pacotes (%)", data=filtered_df, marker='o')
+plt.title("Perda média de pacotes por Arquivo")
+plt.xlabel("Arquivo")
+plt.ylabel("Perda de pacotes (%)")
 plt.xticks(rotation=45, ha="right")
 plt.tight_layout()
 plt.show()

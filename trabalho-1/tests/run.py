@@ -3,9 +3,9 @@ import subprocess
 from datetime import datetime
 
 # Constants
-IP = sys.argv[1]
-PORT = sys.argv[2]
-EXECUTABLE = sys.argv[3]
+EXECUTABLE = sys.argv[1]
+IP = sys.argv[2]
+PORT = sys.argv[3]
 ITERATIONS = int(sys.argv[4])
 
 # Define input files
