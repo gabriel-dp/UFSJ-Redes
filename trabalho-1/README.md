@@ -7,6 +7,8 @@
 #define ESTUDANTES ["Breno Esteves", "Gabriel de Paula", "Guilherme Francis"]
 ```
 
+[`> Ver documentação <`](./docs/documentation-ptbr.pdf)
+
 &nbsp;
 
 ## 🖥 Como executar
