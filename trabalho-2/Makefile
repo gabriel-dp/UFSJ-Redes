@@ -9,8 +9,8 @@ SRCDIR := src
 UTILS := hangman utils
 
 # Compiler flags
-CFLAGS = -Wall -g
-LFLAGS = -lm
+CFLAGS = - Wall # -g -ggdb3
+LFLAGS = 
 
 # Rule to create necessary directories
 $(BUILDDIR) $(BINDIR):

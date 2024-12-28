@@ -8,9 +8,10 @@
 #include "utils.h"
 
 void communicate(int sock) {
-    char request[WORD_MAX_SIZE + 1] = "\0\0";
+    char request[WORD_MAX_SIZE + 1] = "\0";
     char response[RESPONSE_SIZE] = {0};
 
+    /* Loop to keep connection open */
     do {
         /* Send attempt to server */
         ssize_t bytes_sent = write(sock, request, WORD_MAX_SIZE);
@@ -26,6 +27,7 @@ void communicate(int sock) {
         word_t mystery_word;
         decode(response, &game, &mystery_word);
 
+        /* Display game on user terminal */
         print_game(&game, &mystery_word);
         if (game.state != PLAYING) {
             if (game.state == WON) {
@@ -37,13 +39,11 @@ void communicate(int sock) {
         }
 
         /* User input */
-        printf("Your turn: ");
+        printf("Your turn (0 to leave): ");
         fgets(request, WORD_MAX_SIZE, stdin);
         request[strcspn(request, "\n")] = '\0';
         uppercase(request);
     } while (strcmp(request, "0") != 0);
-
-    write(sock, "\0", 1);
 }
 
 int main(int argc, char **argv) {

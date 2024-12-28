@@ -8,7 +8,6 @@
 #define BUFFER_SIZE 1024
 
 typedef char file_path[512];
-typedef long double time;
 
 void success(const char *message);
 void error(const char *message);

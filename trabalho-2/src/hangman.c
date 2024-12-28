@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 void uppercase(char* str) {
     for (int i = 0; str[i] != '\0'; i++) {
@@ -19,7 +18,6 @@ word_t get_random_word(char* file_path) {
     FILE* file = fopen(file_path, "r");
     fscanf(file, "%d", &total_lines);
 
-    srand(time(NULL));
     random_line = rand() % total_lines;
 
     for (int i = 0; i <= random_line; i++) {
@@ -28,10 +26,10 @@ word_t get_random_word(char* file_path) {
     }
 
     word_t word;
-    word.chars = (char*)malloc(strlen(buffer) + 1);
-    word.size = strlen(buffer);
     strcpy(word.chars, buffer);
     uppercase(word.chars);
+
+    fclose(file);
 
     return word;
 }
@@ -72,10 +70,8 @@ void init_game(game_t* game, word_t* mystery_word, word_t* correct_word) {
     game->lifes = 6;
     memset(game->alphabet, UNKNOWN, 26 * sizeof(int));
 
-    mystery_word->size = correct_word->size;
-    mystery_word->chars = (char*)malloc(mystery_word->size + 1);
-    memset(mystery_word->chars, 0, mystery_word->size + 1);
-    for (size_t i = 0; i < correct_word->size; i++) {
+    memset(mystery_word->chars, 0, sizeof(mystery_word->chars));
+    for (size_t i = 0; i < strlen(correct_word->chars); i++) {
         mystery_word->chars[i] = '-';
     }
 }
@@ -83,7 +79,7 @@ void init_game(game_t* game, word_t* mystery_word, word_t* correct_word) {
 int try_letter(char letter, game_t* game, word_t* mystery_word, word_t* correct_word) {
     int exists = 0;
 
-    for (int i = 0; i < correct_word->size; i++) {
+    for (int i = 0; i < strlen(correct_word->chars); i++) {
         if (correct_word->chars[i] == letter) {
             mystery_word->chars[i] = letter;
             exists = 1;
@@ -104,7 +100,7 @@ int try_letter(char letter, game_t* game, word_t* mystery_word, word_t* correct_
 }
 
 int try_word(word_t* word, game_t* game, word_t* mystery_word, word_t* correct_word) {
-    if (word->size == correct_word->size && strcmp(word->chars, correct_word->chars) == 0) {
+    if (strcmp(word->chars, correct_word->chars) == 0) {
         strcpy(mystery_word->chars, word->chars);
         game->state = WON;
         return 1;
@@ -124,7 +120,7 @@ void encode(char* message, game_t* game, word_t* mystery_word) {
         message[i + 2] = game->alphabet[i];
     }
 
-    message[28] = mystery_word->size;
+    message[28] = strlen(mystery_word->chars);
     strcat(message + 29, mystery_word->chars);
 }
 
@@ -135,8 +131,6 @@ void decode(char* message, game_t* game, word_t* mystery_word) {
         game->alphabet[i] = message[i + 2];
     }
 
-    mystery_word->size = message[28];
-    mystery_word->chars = (char*)malloc(mystery_word->size + 1);
-    memset(mystery_word->chars, 0, mystery_word->size + 1);
-    strncpy(mystery_word->chars, message + 29, mystery_word->size);
+    int size = message[28];
+    strncpy(mystery_word->chars, message + 29, size);
 }

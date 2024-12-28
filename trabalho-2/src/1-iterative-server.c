@@ -1,7 +1,9 @@
 #include <arpa/inet.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "hangman.h"
@@ -12,27 +14,23 @@ int communicate(int client_sock, game_t* game, word_t* mystery_word, word_t* cor
     char request[WORD_MAX_SIZE + 1] = {0};
     char response[RESPONSE_SIZE] = {0};
 
-    /* Receive player request and process it */
+    /* Receive player request */
     size_t bytes_received = read(client_sock, request, sizeof(request));
-    success("Received attempt");
+    warn("Received attempt");
     printf("|%s|\n", request);
 
+    /* Process player attempt */
     if (strlen(request) == 1) {
         char letter = request[0];
         try_letter(letter, game, mystery_word, correct_word);
     } else if (strlen(request) > 1) {
         word_t word;
-        word.chars = malloc(strlen(request) + 1);
-        word.size = strlen(request);
-        memset(word.chars, 0, strlen(request) + 1);
-        strncpy(word.chars, request, strlen(request));
+        strcpy(word.chars, request);
         try_word(&word, game, mystery_word, correct_word);
-        free(word.chars);
     }
 
-    // "\0\0" Keep playing
-    // "" or "\0" ends connection
-    if (bytes_received <= 1) {
+    /* Handle user disconnection */
+    if (bytes_received < 0) {
         warn("Ending connection");
         return 0;
     }
@@ -40,12 +38,30 @@ int communicate(int client_sock, game_t* game, word_t* mystery_word, word_t* cor
     /* Send encoded game to client */
     encode(response, game, mystery_word);
     write(client_sock, response, RESPONSE_SIZE);
-    success("Finish attempt");
+    warn("Finish attempt");
 
+    /* Close connection game ends */
     return game->state == PLAYING;
 }
 
+/* Properly handle server stop */
+int server_sock = -1;
+void handle_server_stop(int sig) {
+    if (server_sock >= 0) {
+        close(server_sock);
+        success("Server socket closed");
+    }
+    error("Server stopped");
+}
+
 int main(int argc, char** argv) {
+    /* Register signal handlers */
+    signal(SIGINT, handle_server_stop);
+    signal(SIGTERM, handle_server_stop);
+
+    /* Set random seed only once */
+    srand(time(NULL));
+
     /* Base input constants */
     char *ip, *file;
     int port;
@@ -55,7 +71,7 @@ int main(int argc, char** argv) {
     struct sockaddr_in server_addr, client_addr;
 
     /* Create socket */
-    int server_sock = socket(AF_INET, SOCK_STREAM, 0);
+    server_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (server_sock < 0) {
         error("Failed to create TCP server socket");
     }
@@ -78,9 +94,8 @@ int main(int argc, char** argv) {
         error("Failed to listen for connections");
     }
 
-    /* Infinity games */
+    /* Loop to generate infinity games */
     while (1) {
-        /* Single game logic */
         word_t correct_word = get_random_word(file);
         game_t game;
         word_t mystery_word;
@@ -107,13 +122,7 @@ int main(int argc, char** argv) {
             close(client_sock);
             success("Client disconnected");
         } while (game.state == PLAYING);
-
-        free(mystery_word.chars);
-        free(correct_word.chars);
     }
-
-    /* Close server socket */
-    close(server_sock);
 
     return 0;
 }

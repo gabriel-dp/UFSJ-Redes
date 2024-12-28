@@ -21,8 +21,7 @@ enum alphabet_state {
 typedef int alphabet_state_t[26];
 
 typedef struct {
-    char* chars;
-    size_t size;
+    char chars[WORD_MAX_SIZE + 1];
 } word_t;
 
 typedef struct {
