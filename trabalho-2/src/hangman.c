@@ -28,7 +28,7 @@ word_t get_random_word(char* file_path) {
     }
 
     word_t word;
-    word.chars = malloc(strlen(buffer) + 1);
+    word.chars = (char*)malloc(strlen(buffer) + 1);
     word.size = strlen(buffer);
     strcpy(word.chars, buffer);
     uppercase(word.chars);
@@ -64,7 +64,7 @@ void print_game(game_t* game, word_t* word) {
     printf((game->lifes < 1) ? "\\" : " ");
     printf("\n");
 
-    printf("|\n");
+    printf("|\n\n");
 }
 
 void init_game(game_t* game, word_t* mystery_word, word_t* correct_word) {
@@ -72,8 +72,8 @@ void init_game(game_t* game, word_t* mystery_word, word_t* correct_word) {
     game->lifes = 6;
     memset(game->alphabet, UNKNOWN, 26 * sizeof(int));
 
-    mystery_word->chars = malloc(correct_word->size + 1);
     mystery_word->size = correct_word->size;
+    mystery_word->chars = (char*)malloc(mystery_word->size + 1);
     memset(mystery_word->chars, 0, mystery_word->size + 1);
     for (size_t i = 0; i < correct_word->size; i++) {
         mystery_word->chars[i] = '-';
@@ -113,4 +113,30 @@ int try_word(word_t* word, game_t* game, word_t* mystery_word, word_t* correct_w
     game->state = LOSE;
     game->lifes = 0;
     return 0;
+}
+
+void encode(char* message, game_t* game, word_t* mystery_word) {
+    memset(message, 0, RESPONSE_SIZE);
+
+    message[0] = game->state;
+    message[1] = game->lifes;
+    for (int i = 0; i < 26; i++) {
+        message[i + 2] = game->alphabet[i];
+    }
+
+    message[28] = mystery_word->size;
+    strcat(message + 29, mystery_word->chars);
+}
+
+void decode(char* message, game_t* game, word_t* mystery_word) {
+    game->state = message[0];
+    game->lifes = message[1];
+    for (int i = 0; i < 26; i++) {
+        game->alphabet[i] = message[i + 2];
+    }
+
+    mystery_word->size = message[28];
+    mystery_word->chars = (char*)malloc(mystery_word->size + 1);
+    memset(mystery_word->chars, 0, mystery_word->size + 1);
+    strncpy(mystery_word->chars, message + 29, mystery_word->size);
 }

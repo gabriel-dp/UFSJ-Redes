@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #define WORD_MAX_SIZE 64
+#define RESPONSE_SIZE 128
 
 enum game_state {
     PLAYING,
@@ -37,5 +38,8 @@ void init_game(game_t* game, word_t* word, word_t* correct_word);
 
 int try_letter(char letter, game_t* game, word_t* mystery_word, word_t* correct_word);
 int try_word(word_t* word, game_t* game, word_t* mystery_word, word_t* correct_word);
+
+void encode(char* message, game_t* game, word_t* mystery_word);
+void decode(char* message, game_t* game, word_t* mystery_word);
 
 #endif

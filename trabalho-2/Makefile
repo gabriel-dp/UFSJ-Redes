@@ -1,38 +1,41 @@
-# Defines C Compiler
-CC := gcc
-
-# Final file name
-BINARY := out
+# Compiler
+CC = gcc
 
 # Code directory structure
 BINDIR := bin
 BUILDDIR := build
 INCDIR := include	
 SRCDIR := src
+UTILS := hangman utils
 
 # Compiler flags
-CFLAGS := -Wall -I $(INCDIR)
+CFLAGS = -Wall -g
+LFLAGS = -lm
 
-# Linker flags
-LDFLAGS := -lm
+# Rule to create necessary directories
+$(BUILDDIR) $(BINDIR):
+	@ if [ ! -d ./$@ ]; then mkdir -p $@; fi
 
-# %.o file names
-NAMES := $(notdir $(basename $(wildcard $(SRCDIR)/*.c)))
-OBJECTS :=$(patsubst %,$(BUILDDIR)/%.o,$(NAMES))
+# Generate object files for utilities
+UTIL_OBJS := $(patsubst %,$(BUILDDIR)/%.o,$(UTILS))
 
+# Pattern rule to compile .c files to .o files
+$(BUILDDIR)/%.o: $(SRCDIR)/%.c | $(BUILDDIR)
+	$(CC) -c $< -o $@ $(CFLAGS) -I $(INCDIR)
 
-# Rule for link and generate the binary file
-all: $(OBJECTS)
-	@ if [ ! -d ./$(BINDIR) ]; then mkdir -p $(BINDIR);	fi
-	$(CC) -o $(BINDIR)/$(BINARY) $+ $(LDFLAGS)
+# Pattern rule to compile .o files to executables
+$(BINDIR)/%: $(BUILDDIR)/%.o $(UTIL_OBJS) | $(BINDIR)
+	$(CC) -o $@ $^ $(LFLAGS)
 
-# Rule for object binaries compilation
-$(BUILDDIR)/%.o: $(SRCDIR)/%.c
-	@ if [ ! -d ./$(BUILDDIR) ]; then mkdir -p $(BUILDDIR);fi
-	$(CC) -c $^ -o $@ $(CFLAGS) 
+# Pattern rule to compile the specified file using 'make <file_name>'
+%: $(BINDIR)/%
+	@echo "Building $@..."
 
+# Keep object files after compilation
+OBJECTS := $(patsubst %,$(BUILDDIR)/%.o,$(NAMES))
+.SECONDARY: $(OBJECTS)
 
-# Clean BIN and BUILD dirs
-.PHONY: clean
-clean: 
-	rm -rf $(BUILDDIR) $(BINDIR) $(BINDIR)/$(BINARY)
+# Clean up generated files
+.PHONY: all clean
+clean:
+	rm -rf $(BINDIR) $(BUILDDIR)
