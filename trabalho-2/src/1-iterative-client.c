@@ -4,47 +4,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "communicate.h"
 #include "hangman.h"
 #include "utils.h"
-
-void communicate(int sock) {
-    char request[WORD_MAX_SIZE + 1] = "\0";
-    char response[RESPONSE_SIZE] = {0};
-
-    /* Loop to keep connection open */
-    do {
-        /* Send attempt to server */
-        ssize_t bytes_sent = write(sock, request, WORD_MAX_SIZE);
-        if (bytes_sent < 0) {
-            close(sock);
-            error("Failed to write data");
-        }
-        success("Sent data");
-
-        /* Read game state from server */
-        read(sock, response, sizeof(response));
-        game_t game;
-        word_t mystery_word;
-        decode(response, &game, &mystery_word);
-
-        /* Display game on user terminal */
-        print_game(&game, &mystery_word);
-        if (game.state != PLAYING) {
-            if (game.state == WON) {
-                printf("YOU WON! CONGRATS!\n\n");
-            } else {
-                printf("YOU LOSE! DUMBASS!\n\n");
-            }
-            break;
-        }
-
-        /* User input */
-        printf("Your turn (0 to leave): ");
-        fgets(request, WORD_MAX_SIZE, stdin);
-        request[strcspn(request, "\n")] = '\0';
-        uppercase(request);
-    } while (strcmp(request, "0") != 0);
-}
 
 int main(int argc, char **argv) {
     /* Base input constants */
@@ -75,8 +37,8 @@ int main(int argc, char **argv) {
     }
     success("Connected to the server");
 
-    /* Communicate with server */
-    communicate(sock);
+    /* Communicate */
+    communicate_with_server(sock);
 
     /* Close socket */
     close(sock);

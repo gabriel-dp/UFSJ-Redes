@@ -125,6 +125,8 @@ void encode(char* message, game_t* game, word_t* mystery_word) {
 }
 
 void decode(char* message, game_t* game, word_t* mystery_word) {
+    memset(mystery_word->chars, 0, sizeof(mystery_word->chars));
+
     game->state = message[0];
     game->lifes = message[1];
     for (int i = 0; i < 26; i++) {

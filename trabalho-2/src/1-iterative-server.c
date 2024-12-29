@@ -6,43 +6,9 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "communicate.h"
 #include "hangman.h"
 #include "utils.h"
-
-int communicate(int client_sock, game_t* game, word_t* mystery_word, word_t* correct_word) {
-    /* Create data buffers */
-    char request[WORD_MAX_SIZE + 1] = {0};
-    char response[RESPONSE_SIZE] = {0};
-
-    /* Receive player request */
-    size_t bytes_received = read(client_sock, request, sizeof(request));
-    warn("Received attempt");
-    printf("|%s|\n", request);
-
-    /* Process player attempt */
-    if (strlen(request) == 1) {
-        char letter = request[0];
-        try_letter(letter, game, mystery_word, correct_word);
-    } else if (strlen(request) > 1) {
-        word_t word;
-        strcpy(word.chars, request);
-        try_word(&word, game, mystery_word, correct_word);
-    }
-
-    /* Handle user disconnection */
-    if (bytes_received < 0) {
-        warn("Ending connection");
-        return 0;
-    }
-
-    /* Send encoded game to client */
-    encode(response, game, mystery_word);
-    write(client_sock, response, RESPONSE_SIZE);
-    warn("Finish attempt");
-
-    /* Close connection game ends */
-    return game->state == PLAYING;
-}
 
 /* Properly handle server stop */
 int server_sock = -1;
@@ -112,10 +78,10 @@ int main(int argc, char** argv) {
             }
             success("Client connected");
 
-            /* Communicate with client */
+            /* Communicate */
             int keep_connection = 0;
             do {
-                keep_connection = communicate(client_sock, &game, &mystery_word, &correct_word);
+                keep_connection = communicate_with_client(client_sock, &game, &mystery_word, &correct_word);
             } while (keep_connection);
 
             /* Close client socket */

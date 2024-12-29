@@ -6,10 +6,10 @@ BINDIR := bin
 BUILDDIR := build
 INCDIR := include	
 SRCDIR := src
-UTILS := hangman utils
+UTILS := hangman utils communicate
 
 # Compiler flags
-CFLAGS = - Wall # -g -ggdb3
+CFLAGS = -Wall # -g -ggdb3
 LFLAGS = 
 
 # Rule to create necessary directories

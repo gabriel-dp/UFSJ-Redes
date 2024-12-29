@@ -1,4 +1,4 @@
-#include "../include/utils.h"
+#include "utils.h"
 
 #include <getopt.h>
 #include <stdio.h>
@@ -26,7 +26,7 @@ void get_args(int argc, char **argv, char **ip, int *port, char **file) {
         *file = NULL;
     }
 
-    /* Reads data coming from command line */
+    /* Read data coming from command line */
     int option;
     while ((option = getopt(argc, argv, "i:p:f:")) != -1) {
         switch (option) {
@@ -44,7 +44,7 @@ void get_args(int argc, char **argv, char **ip, int *port, char **file) {
         }
     }
 
-    /* Checks required flags */
+    /* Check required flags */
     if (*ip == NULL) error("IP is missing on args");
     if (*port == -1) error("Port number is missing on args");
 }

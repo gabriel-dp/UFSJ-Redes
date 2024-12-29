@@ -1,8 +1,6 @@
 #ifndef HANGMAN_H
 #define HANGMAN_H
 
-#include <stdlib.h>
-
 #define WORD_MAX_SIZE 64
 #define RESPONSE_SIZE 128
 
@@ -31,6 +29,7 @@ typedef struct {
 } game_t;
 
 void uppercase(char* str);
+
 word_t get_random_word(char* file_path);
 void print_game(game_t* game, word_t* word);
 void init_game(game_t* game, word_t* word, word_t* correct_word);
