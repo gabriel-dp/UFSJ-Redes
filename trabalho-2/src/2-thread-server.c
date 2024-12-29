@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,6 +10,31 @@
 #include "communicate.h"
 #include "hangman.h"
 #include "utils.h"
+
+typedef struct {
+    int client_sock;
+    game_t* game;
+    word_t *mystery_word, *correct_word;
+} thread_data_t;
+
+void* handle_client(void* arg) {
+    /* Extract data and free pointer */
+    thread_data_t* data = (thread_data_t*)arg;
+    int client_sock = data->client_sock;
+    game_t* game = data->game;
+    word_t* mystery_word = data->mystery_word;
+    word_t* correct_word = data->correct_word;
+    free(data);
+
+    /* Communicate */
+    communicate_with_client(client_sock, game, mystery_word, correct_word);
+
+    /* Close client socket and thread */
+    close(client_sock);
+    success("Client disconnected");
+    pthread_exit(NULL);
+    success("Thread exit");
+}
 
 /* Properly handle server stop */
 int server_sock = -1;
@@ -27,6 +53,9 @@ int main(int argc, char** argv) {
 
     /* Set random seed only once */
     srand(time(NULL));
+
+    /* Thread management */
+    pthread_t tid;
 
     /* Base input constants */
     char *ip, *file;
@@ -78,12 +107,20 @@ int main(int argc, char** argv) {
             }
             success("Client connected");
 
-            /* Communicate */
-            communicate_with_client(client_sock, &game, &mystery_word, &correct_word);
-
-            /* Close client socket */
-            close(client_sock);
-            success("Client disconnected");
+            /* Create thread to handle client */
+            thread_data_t* data = malloc(sizeof(thread_data_t));
+            data->client_sock = client_sock;
+            data->game = &game;
+            data->correct_word = &correct_word;
+            data->mystery_word = &mystery_word;
+            if (pthread_create(&tid, NULL, handle_client, data) != 0) {
+                error("Thread creation error");
+                close(data->client_sock);
+                free(data);
+                continue;
+            }
+            pthread_detach(tid);
+            success("Thread created");
         } while (game.state == PLAYING);
     }
 
