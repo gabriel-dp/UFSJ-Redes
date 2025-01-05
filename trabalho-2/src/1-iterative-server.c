@@ -79,7 +79,10 @@ int main(int argc, char** argv) {
             success("Client connected");
 
             /* Communicate */
-            communicate_with_client(client_sock, &game, &mystery_word, &correct_word);
+            int keep_alive;
+            do {
+                keep_alive = communicate_with_client(client_sock, &game, &mystery_word, &correct_word);
+            } while (game.state == PLAYING && keep_alive);
 
             /* Close client socket */
             close(client_sock);

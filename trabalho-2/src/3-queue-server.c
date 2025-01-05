@@ -75,7 +75,10 @@ void *worker_thread(void *arg) {
         success("Thread received client to communicate");
 
         /* Communicate */
-        communicate_with_client(data.client_sock, data.game, data.mystery_word, data.correct_word);
+        int keep_alive;
+        do {
+            keep_alive = communicate_with_client(data.client_sock, data.game, data.mystery_word, data.correct_word);
+        } while (data.game->state == PLAYING && keep_alive);
 
         /* Close client socket */
         close(data.client_sock);
