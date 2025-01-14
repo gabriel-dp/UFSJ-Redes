@@ -4,7 +4,7 @@
 #define TRABALHO 2
 #define SEMESTRE "2024.2"
 #define PROFESSOR "Rafael Sachetto"
-#define ESTUDANTES ["Breno Estever", "Gabriel de Paula", "Guilherme Francis"]
+#define ESTUDANTES ["Breno Esteves", "Gabriel de Paula", "Guilherme Francis"]
 ```
 
 [`> Ver documentação <`](./docs/documentation-ptbr.pdf)
