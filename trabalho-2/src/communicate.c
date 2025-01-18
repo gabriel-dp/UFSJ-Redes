@@ -47,6 +47,29 @@ void communicate_with_server(int socket) {
     } while (strcmp(request, "0") != 0);
 }
 
+void send_file(int client_sock) {
+    char buffer[BUFFER_SIZE];
+
+    FILE* file = fopen("tests/01mb.bin", "rb");
+    if (file == NULL) {
+        /* Send error message */
+        strcpy(buffer, "ERROR - FILE NOT FOUND");
+        write(client_sock, buffer, strlen(buffer));
+        return;
+    }
+
+    /* Read file and send it to the client */
+    size_t bytes_read;
+    memset(buffer, 0, sizeof(buffer));
+    while ((bytes_read = fread(buffer, sizeof(char), BUFFER_SIZE, file)) > 0) {
+        write(client_sock, buffer, bytes_read);
+        memset(buffer, 0, sizeof(buffer));
+    }
+
+    /* Close the file */
+    fclose(file);
+}
+
 int communicate_with_client(int client_socket, game_t* game, word_t* mystery_word, word_t* correct_word) {
     const char* endpoint_attempt = "/game/try/";
     char endpoint[20] = {0};
@@ -89,17 +112,21 @@ int communicate_with_client(int client_socket, game_t* game, word_t* mystery_wor
     /* Send encoded game to client */
     encode(game_state, game, mystery_word);
 
-    /* HTTP encoding */
+    /* HTTP encoding stuff */
     const char* status_line = "HTTP/1.1 200 OK\r\n";
     const char* content_type = "Content-Type: text/html\r\n";
     char content_length[64];
-    snprintf(content_length, sizeof(content_length), "Content-Length: %lu\r\n", strlen(game_state));
+    snprintf(content_length, sizeof(content_length), "Content-Length: %lu\r\n", strlen(game_state) + 1024 * 1024);
     const char* connection = "Connection: keep-alive\r\n";
     const char* header_end = "\r\n";
     snprintf(response, sizeof(response), "%s%s%s%s%s", status_line, content_type, content_length, connection, header_end);  // Response header
-    strncat(response, game_state, RESPONSE_SIZE);                                                                           // Response body
 
-    write(client_socket, response, RESPONSE_SIZE);
+    /* HTTP response sending*/
+    strncat(response, game_state, RESPONSE_SIZE);
+    strcat(response, "|");
+    write(client_socket, response, strlen(response));
+    send_file(client_socket);
+
     warn("Finish attempt");
 
     return 1;
