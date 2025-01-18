@@ -114,14 +114,17 @@ int try_word(word_t* word, game_t* game, word_t* mystery_word, word_t* correct_w
 void encode(char* message, game_t* game, word_t* mystery_word) {
     memset(message, 0, RESPONSE_SIZE);
 
-    message[0] = game->state;
-    message[1] = game->lifes;
+    sprintf(message, "%d,%d,", game->state, game->lifes);
+
+    // Format alphabet state
     for (int i = 0; i < 26; i++) {
-        message[i + 2] = game->alphabet[i];
+        char flag = game->alphabet[i] + 48;
+        strncat(message, &flag, 1);
     }
 
-    message[28] = strlen(mystery_word->chars);
-    strcat(message + 29, mystery_word->chars);
+    // Add the mystery word
+    strcat(message, ",");
+    strcat(message, mystery_word->chars);
 }
 
 void decode(char* message, game_t* game, word_t* mystery_word) {
