@@ -126,16 +126,3 @@ void encode(char* message, game_t* game, word_t* mystery_word) {
     strcat(message, ",");
     strcat(message, mystery_word->chars);
 }
-
-void decode(char* message, game_t* game, word_t* mystery_word) {
-    memset(mystery_word->chars, 0, sizeof(mystery_word->chars));
-
-    game->state = message[0];
-    game->lifes = message[1];
-    for (int i = 0; i < 26; i++) {
-        game->alphabet[i] = message[i + 2];
-    }
-
-    int size = message[28];
-    strncpy(mystery_word->chars, message + 29, size);
-}

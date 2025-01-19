@@ -1,4 +1,4 @@
-# Técnicas de programação de servidores TCP
+# Implementação e Análise de Modelos de Servidores Web
 
 ```c
 #define TRABALHO 2
@@ -30,14 +30,16 @@ Todos ganham ou todos perdem, divirta-se com seus amigos!
     |:-|:-|
     |Iterativo|`1-iterative-server`|
     |Threads|`2-threads-server`|
-    |Fila|`3-queue-server`|
+    |Threads com Fila|`3-queue-server`|
     |Select|`4-select-server`|
 
-2) Compile o servidor escolhido e o cliente
+2) Compile o servidor escolhido
 
     ```bash
-    make <servidor> && make client
+    make <servidor>
     ```
+
+    > `make 1-iterative-server && make 2-thread-server && make 3-queue-server && make 4-select-server`
 
 3) Execute o servidor
 
@@ -47,12 +49,18 @@ Todos ganham ou todos perdem, divirta-se com seus amigos!
     ./bin/<servidor> -i <ip> -p <porta> -f <arquivo_palavras>
     ```
 
-    > O arquivo de palavras deve seguir o modelo [palavras_forca.txt](./tests/palavras_forca.txt)
+    > O arquivo de palavras deve seguir o modelo [palavras_forca.txt](./data/palavras_forca.txt)
 
 4) Execute os clientes
 
-    Para executar o cliente também é necessário definir o IP e a porta (devem ser iguais aos do servidor).
+    É possível testar a aplicação abrindo a url no navegador:
 
-    ```bash
-    ./bin/client -i <ip> -p <porta>
+    ```md
+    http://<ip>:<porta>
+    ```
+
+    Para realizar uma tentativa, de uma letra ou uma palavra inteira, execute:
+
+    ```md
+    http://<ip>:<porta>/game/try/<tentativa>
     ```

@@ -8,49 +8,10 @@
 #include "hangman.h"
 #include "utils.h"
 
-void communicate_with_server(int socket) {
-    char request[WORD_MAX_SIZE + 1] = "\0";
-    char response[RESPONSE_SIZE] = {0};
-
-    /* Loop to keep connection open */
-    do {
-        /* Send attempt to server */
-        ssize_t bytes_sent = write(socket, request, WORD_MAX_SIZE);
-        if (bytes_sent < 0) {
-            close(socket);
-            error("Failed to write data");
-        }
-        success("Sent data");
-
-        /* Read game state from server */
-        read(socket, response, sizeof(response));
-        game_t game;
-        word_t mystery_word;
-        decode(response, &game, &mystery_word);
-
-        /* Display game on user terminal */
-        print_game(&game, &mystery_word);
-        if (game.state != PLAYING) {
-            if (game.state == WON) {
-                printf("YOU WON! CONGRATS!\n\n");
-            } else {
-                printf("YOU LOSE! DUMBASS!\n\n");
-            }
-            break;
-        }
-
-        /* User input */
-        printf("Your turn (0 to leave): ");
-        fgets(request, WORD_MAX_SIZE, stdin);
-        request[strcspn(request, "\n")] = '\0';
-        uppercase(request);
-    } while (strcmp(request, "0") != 0);
-}
-
 void send_file(int client_sock) {
     char buffer[BUFFER_SIZE];
 
-    FILE* file = fopen("tests/01mb.bin", "rb");
+    FILE* file = fopen("data/01mb.bin", "rb");
     if (file == NULL) {
         /* Send error message */
         strcpy(buffer, "ERROR - FILE NOT FOUND");

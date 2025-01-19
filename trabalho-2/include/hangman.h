@@ -38,6 +38,5 @@ int try_letter(char letter, game_t* game, word_t* mystery_word, word_t* correct_
 int try_word(word_t* word, game_t* game, word_t* mystery_word, word_t* correct_word);
 
 void encode(char* message, game_t* game, word_t* mystery_word);
-void decode(char* message, game_t* game, word_t* mystery_word);
 
 #endif
