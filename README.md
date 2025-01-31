@@ -4,19 +4,24 @@
 #define PROFESSOR "Rafael Sachetto"
 #define DISCIPLINA "Redes de Computadores"
 #define ESTUDANTES ["Breno Esteves", "Gabriel de Paula", "Guilherme Francis"]
+#define SEMESTRE "2024.2"
 ```
 
 &nbsp;
 
 ## Trabalho 1
 
-Pendente...
+[**`> Aplicações em rede usando TCP e UDP <`**](./trabalho-1/)
+
+> Network applications using TCP and UDP
 
 &nbsp;
 
 ## Trabalho 2
 
-Pendente...
+[**`> Implementação e Análise de Modelos de Servidores Web <`**](./trabalho-2/)
+
+> Implementation and Analysis of Web Server Models
 
 &nbsp;
 
