@@ -47,6 +47,8 @@ void communicate(int sock, struct sockaddr_in *client_addr, char *output_filenam
         if (last_package != actual_package) {
             fwrite(data, sizeof(char), bytes_received - BUFFER_HEADER_SIZE, output_file);
             last_package = actual_package;
+        } else {
+            warn("Duplicated package, discarded");
         }
 
         /* Send ACK to client*/

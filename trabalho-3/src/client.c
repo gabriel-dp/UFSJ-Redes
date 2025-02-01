@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "utils.h"
@@ -44,7 +45,7 @@ void communicate(int sock, struct sockaddr_in *server_addr, FILE *file) {
             /* Wait for the ACK */
             socklen_t addr_len = sizeof(server_addr);
             ssize_t ack_bytes = recvfrom(sock, ack_buffer, ACK_BUFFER_SIZE, 0, (struct sockaddr *)server_addr, &addr_len);
-            if (ack_bytes < 0) {
+            if (random_error() || ack_bytes < 0) {
                 warn("Timeout ACK, trying again");
                 continue;
             }
@@ -56,6 +57,9 @@ void communicate(int sock, struct sockaddr_in *server_addr, FILE *file) {
 }
 
 int main(int argc, char **argv) {
+    /* Randomness */
+    srand(time(NULL));
+
     /* Network connection variables */
     char *ip, *filename;
     int port;

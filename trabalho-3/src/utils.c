@@ -77,3 +77,7 @@ int decode(char *buffer, long *package_id, long *total_packages, char *data) {
 
     return 1;
 }
+
+int random_error() {
+    return (rand() % 10) == 0;  // 10% chance to return true
+}

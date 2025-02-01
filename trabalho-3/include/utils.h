@@ -14,4 +14,6 @@ void get_args(int argc, char **argv, char **ip, int *port, char **file);
 int encode(char *buffer, long package_id, long total_packages, char *data);
 int decode(char *buffer, long *package_id, long *total_packages, char *data);
 
+int random_error();
+
 #endif
