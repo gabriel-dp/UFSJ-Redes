@@ -8,14 +8,12 @@
 
 #include "utils.h"
 
-#define BUFFER_SIZE 1024
 #define ACK_BUFFER_SIZE 64
 #define TIMEOUT_SEC 2
 #define TIMEOUT_USEC 0
 
 void communicate(int sock, struct sockaddr_in *server_addr, FILE *file) {
     socklen_t addr_len = sizeof(*server_addr);
-    char buffer[BUFFER_SIZE] = {0}, ack_buffer[ACK_BUFFER_SIZE] = {0};
 
     /* Get file size and determine number of packages */
     fseek(file, 0, SEEK_END);
@@ -25,21 +23,15 @@ void communicate(int sock, struct sockaddr_in *server_addr, FILE *file) {
 
     /* Send file to server in multiples packages */
     size_t bytes_read;
-    long package_id = 0;
-    while ((bytes_read = fread(buffer + 6, sizeof(char), BUFFER_SIZE - 6, file)) > 0) {
-        /* Encode package id and total packages using 3 bytes for each */
-        buffer[0] = (package_id >> 16) & 0xFF;
-        buffer[1] = (package_id >> 8) & 0xFF;
-        buffer[2] = package_id & 0xFF;
-        buffer[3] = (total_packages >> 16) & 0xFF;
-        buffer[4] = (total_packages >> 8) & 0xFF;
-        buffer[5] = total_packages & 0xFF;
-
-        warn("Sending package");
+    long actual_package = 0;
+    char buffer[BUFFER_SIZE], data[BUFFER_DATA_SIZE], ack_buffer[ACK_BUFFER_SIZE];
+    while ((bytes_read = fread(data, sizeof(char), BUFFER_DATA_SIZE, file)) > 0) {
+        /* Encode package data */
+        encode(buffer, actual_package, total_packages, data);
 
         /* Send package */
         while (1) {
-            if (sendto(sock, buffer, BUFFER_SIZE, 0, (struct sockaddr *)server_addr, addr_len) < 0) {
+            if (sendto(sock, buffer, bytes_read + BUFFER_HEADER_SIZE, 0, (struct sockaddr *)server_addr, addr_len) < 0) {
                 error("Failed to send package to server");
             }
 
@@ -57,9 +49,7 @@ void communicate(int sock, struct sockaddr_in *server_addr, FILE *file) {
                 continue;
             }
 
-            /* Check if ACK is valid? */
-            memset(buffer, 0, BUFFER_SIZE);
-            package_id++;
+            actual_package++;
             break;
         }
     }
@@ -93,7 +83,9 @@ int main(int argc, char **argv) {
     server_addr.sin_addr.s_addr = inet_addr(ip);
 
     /* Send file to server */
+    success("Start sending file");
     communicate(sock, &server_addr, file);
+    success("Finish sending file");
 
     /* Close the socket */
     fclose(file);

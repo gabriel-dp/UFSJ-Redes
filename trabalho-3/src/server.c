@@ -7,50 +7,60 @@
 
 #include "utils.h"
 
-#define BUFFER_SIZE 1024
-
 /* Properly handle server stop */
-int server_sock = -1;
+int sock = -1;
 void handle_server_stop(int sig) {
-    if (server_sock >= 0) {
-        close(server_sock);
+    if (sock >= 0) {
+        close(sock);
         success("Server socket closed");
+        exit(0);
     }
     error("Server stopped");
 }
 
-void communicate(int sock, struct sockaddr_in *client_addr, FILE *file) {
-    char buffer[BUFFER_SIZE];
+void communicate(int sock, struct sockaddr_in *client_addr, char *output_filename) {
     socklen_t addr_len = sizeof(*client_addr);
 
-    unsigned long int total_packages = -1, last_package = -1, actual_package = -1;
+    FILE *output_file = NULL;
+    char buffer[BUFFER_SIZE], data[BUFFER_DATA_SIZE];
+    long total_packages = -1, last_package = -1, actual_package = -1;
+
     do {
         /* Receive package */
-        memset(buffer, 0, BUFFER_SIZE);
         ssize_t bytes_received = recvfrom(sock, buffer, BUFFER_SIZE, 0, (struct sockaddr *)client_addr, &addr_len);
-        if (bytes_received < 0) {
-            error("Failed to receive ");
+        if (bytes_received <= 0) {
+            warn("Failed to receive data");
+            break;
         }
-        warn("Received package");
 
-        /* Validate content of the package */
-        // Checksum?
-        if (total_packages == -1) {
-            total_packages = ((unsigned char)buffer[3] << 16) | ((unsigned char)buffer[4] << 8) | (unsigned char)buffer[5];
+        /* Create output file to write data */
+        if (output_file == NULL) {
+            output_file = fopen(output_filename, "wb");
+            if (output_file == NULL) {
+                error("Failed to create output file");
+            }
+            success("Start receiving file");
         }
-        actual_package = ((unsigned char)buffer[0] << 16) | ((unsigned char)buffer[1] << 8) | (unsigned char)buffer[2];
-        printf("%ld | %ld | %ld | (%ld)\n\n", last_package, actual_package, total_packages, bytes_received);
+
+        /* Decode package content */
+        decode(buffer, &actual_package, &total_packages, data);
         if (last_package != actual_package) {
-            fwrite(buffer, sizeof(char), bytes_received, file);  // NÃO TA ESCREVENDO ESSA CACETA NO ARQUIVO
+            fwrite(data, sizeof(char), bytes_received - BUFFER_HEADER_SIZE, output_file);
             last_package = actual_package;
         }
 
         /* Send ACK to client*/
-        // Different ACKs for each package?
         if (sendto(sock, "ACK", 3, 0, (struct sockaddr *)client_addr, addr_len) < 0) {
-            error("Failed to send ACK");
+            warn("Failed to send ACK");
+            break;
         }
     } while (actual_package != total_packages - 1);
+
+    /* Properly closes output file */
+    if (output_file != NULL) {
+        success("Finish receiving file");
+        fclose(output_file);
+    }
 }
 
 int main(int argc, char **argv) {
@@ -59,15 +69,15 @@ int main(int argc, char **argv) {
     signal(SIGTERM, handle_server_stop);
 
     /* Network connection variables */
-    char *ip, *filename;
+    char *ip, *output_filename;
     int port;
-    get_args(argc, argv, &ip, &port, &filename);
+    get_args(argc, argv, &ip, &port, &output_filename);
 
     /* Socket variables */
     struct sockaddr_in server_addr, client_addr;
 
     /* Create UDP socket */
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) {
         error("Failed to create UDP server socket");
     }
@@ -88,15 +98,7 @@ int main(int argc, char **argv) {
     /* Infinite waiting */
     while (1) {
         success("Waiting");
-
-        FILE *file = fopen(filename, "wb");
-        if (file == NULL) {
-            error("Failed to create output file");
-        }
-
-        communicate(sock, &client_addr, file);
-
-        fclose(file);
+        communicate(sock, &client_addr, output_filename);
     }
 
     return 0;
