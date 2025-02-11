@@ -9,7 +9,6 @@
 
 #include "utils.h"
 
-#define ACK_BUFFER_SIZE 1
 #define TIMEOUT_SEC 2
 #define TIMEOUT_USEC 0
 
@@ -25,7 +24,7 @@ void communicate(int sock, struct sockaddr_in *server_addr, FILE *file) {
     /* Send file to server in multiples packages */
     size_t bytes_read;
     long actual_package = 0;
-    char buffer[BUFFER_SIZE], data[BUFFER_DATA_SIZE], ack_buffer[ACK_BUFFER_SIZE];
+    char buffer[BUFFER_SIZE], data[BUFFER_DATA_SIZE], ack_buffer;
     while ((bytes_read = fread(data, sizeof(char), BUFFER_DATA_SIZE, file)) > 0) {
         /* Encode package data */
         encode(buffer, actual_package, total_packages, data);
@@ -47,9 +46,13 @@ void communicate(int sock, struct sockaddr_in *server_addr, FILE *file) {
 
             /* Wait for the ACK */
             socklen_t addr_len = sizeof(server_addr);
-            ssize_t ack_bytes = recvfrom(sock, ack_buffer, ACK_BUFFER_SIZE, 0, (struct sockaddr *)server_addr, &addr_len);
+            ssize_t ack_bytes = recvfrom(sock, &ack_buffer, 1, 0, (struct sockaddr *)server_addr, &addr_len);
             if (ack_bytes < 0) {
                 warn("Timeout ACK, trying again");
+                continue;
+            }
+            if (actual_package % 2 != ack_buffer) {
+                warn("Wrong ACK, trying again");
                 continue;
             }
 
