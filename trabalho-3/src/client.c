@@ -9,7 +9,7 @@
 
 #include "utils.h"
 
-#define ACK_BUFFER_SIZE 64
+#define ACK_BUFFER_SIZE 1
 #define TIMEOUT_SEC 2
 #define TIMEOUT_USEC 0
 
@@ -19,7 +19,7 @@ void communicate(int sock, struct sockaddr_in *server_addr, FILE *file) {
     /* Get file size and determine number of packages */
     fseek(file, 0, SEEK_END);
     long fileSize = ftell(file);
-    long total_packages = ceil((double)fileSize / (BUFFER_SIZE - 6));
+    long total_packages = ceil((double)fileSize / (BUFFER_DATA_SIZE));
     fseek(file, 0, SEEK_SET);
 
     /* Send file to server in multiples packages */
@@ -29,11 +29,14 @@ void communicate(int sock, struct sockaddr_in *server_addr, FILE *file) {
     while ((bytes_read = fread(data, sizeof(char), BUFFER_DATA_SIZE, file)) > 0) {
         /* Encode package data */
         encode(buffer, actual_package, total_packages, data);
+        printf("    %ld / %ld\n", actual_package, total_packages);
 
         /* Send package */
         while (1) {
-            if (sendto(sock, buffer, bytes_read + BUFFER_HEADER_SIZE, 0, (struct sockaddr *)server_addr, addr_len) < 0) {
-                error("Failed to send package to server");
+            if (!random_error()) {  // Simulate package loss
+                if (sendto(sock, buffer, bytes_read + BUFFER_HEADER_SIZE, 0, (struct sockaddr *)server_addr, addr_len) < 0) {
+                    error("Failed to send package to server");
+                }
             }
 
             /* Configure ACK timeout */
@@ -45,7 +48,7 @@ void communicate(int sock, struct sockaddr_in *server_addr, FILE *file) {
             /* Wait for the ACK */
             socklen_t addr_len = sizeof(server_addr);
             ssize_t ack_bytes = recvfrom(sock, ack_buffer, ACK_BUFFER_SIZE, 0, (struct sockaddr *)server_addr, &addr_len);
-            if (random_error() || ack_bytes < 0) {
+            if (ack_bytes < 0) {
                 warn("Timeout ACK, trying again");
                 continue;
             }
@@ -94,7 +97,7 @@ int main(int argc, char **argv) {
     /* Close the socket */
     fclose(file);
     close(sock);
-    success("Disconnected");
+    success("Socket closed");
 
     return 0;
 }

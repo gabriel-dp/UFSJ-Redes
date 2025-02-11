@@ -2,7 +2,8 @@
 #define UTILS_H
 
 #define BUFFER_SIZE 1024
-#define BUFFER_HEADER_SIZE 6
+#define BUFFER_CHECKSUM_SIZE 2
+#define BUFFER_HEADER_SIZE (BUFFER_CHECKSUM_SIZE + 6)
 #define BUFFER_DATA_SIZE (BUFFER_SIZE - BUFFER_HEADER_SIZE)
 
 void success(const char *message);

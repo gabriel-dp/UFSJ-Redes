@@ -33,26 +33,38 @@ void communicate(int sock, struct sockaddr_in *client_addr, char *output_filenam
             break;
         }
 
-        /* Create output file to write data */
-        if (output_file == NULL) {
-            output_file = fopen(output_filename, "wb");
-            if (output_file == NULL) {
-                error("Failed to create output file");
-            }
-            success("Start receiving file");
+        /* Decode package content, checksum */
+        if (!decode(buffer, &actual_package, &total_packages, data) || random_error()) {  // Simulate data integrity problem
+            warn("Checksum failed");
+            continue;
         }
 
-        /* Decode package content */
-        decode(buffer, &actual_package, &total_packages, data);
+        /* Create output file to write data */
+        if (output_file == NULL) {
+            if (actual_package == 0) {
+                output_file = fopen(output_filename, "wb");
+                if (output_file == NULL) {
+                    error("Failed to create output file");
+                }
+                success("Start receiving file");
+            } else {
+                warn("Initial package is invalid");
+                last_package = actual_package;
+            }
+        }
+
+        /* Check package sequence number */
         if (last_package != actual_package) {
             fwrite(data, sizeof(char), bytes_received - BUFFER_HEADER_SIZE, output_file);
             last_package = actual_package;
         } else {
-            warn("Duplicated package, discarded");
+            warn("Duplicated package");
         }
 
         /* Send ACK to client*/
-        if (sendto(sock, "ACK", 3, 0, (struct sockaddr *)client_addr, addr_len) < 0) {
+        char ack = actual_package % 2;
+        if (random_error()) continue;  // Simulate package loss
+        if (sendto(sock, &ack, 1, 0, (struct sockaddr *)client_addr, addr_len) < 0) {
             warn("Failed to send ACK");
             break;
         }
@@ -99,7 +111,7 @@ int main(int argc, char **argv) {
 
     /* Infinite waiting */
     while (1) {
-        success("Waiting");
+        success("Waiting...");
         communicate(sock, &client_addr, output_filename);
     }
 
