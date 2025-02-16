@@ -27,4 +27,6 @@
 
 ## Trabalho 3
 
-Pendente...
+[**`> Implementação do Protocolo de Parada e Espera usando UDP <`**](./trabalho-3/)
+
+> Stop-and-Wait protocol implementation using UDP
