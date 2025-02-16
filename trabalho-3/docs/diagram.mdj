@@ -2073,9 +2073,9 @@
 									},
 									"font": "Arial;13;0",
 									"parentStyle": false,
-									"left": 511,
+									"left": 510,
 									"top": 1328,
-									"width": 26,
+									"width": 29.61181640625,
 									"height": 13,
 									"alpha": 1.9319995813246533,
 									"distance": 18.384776310850235,
@@ -2083,7 +2083,7 @@
 										"$ref": "AAAAAAGVBM9HVcJT+30="
 									},
 									"edgePosition": 1,
-									"text": "[Sim"
+									"text": "[Sim]"
 								},
 								{
 									"_type": "EdgeLabelView",
@@ -5027,7 +5027,7 @@
 					"_parent": {
 						"$ref": "AAAAAAGVBItRsLv7yzU="
 					},
-					"name": "[Sim",
+					"name": "[Sim]",
 					"source": {
 						"$ref": "AAAAAAGVBM4pucIzqpg="
 					},
